@@ -3,6 +3,7 @@ com/bharat/common/exception/BadRequestException.class
 com/bharat/common/response/ErrorResponse$ErrorResponseBuilder.class
 com/bharat/common/response/ErrorResponse.class
 com/bharat/common/response/ApiResponse.class
+com/bharat/common/exception/ConflictException.class
 com/bharat/common/exception/ResourceNotFoundException.class
 com/bharat/common/exception/UnauthorizedException.class
 com/bharat/common/exception/BaseException.class

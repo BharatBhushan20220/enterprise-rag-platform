@@ -1,6 +1,7 @@
 /Users/bharatprasad/Documents/enterprise-rag-platform/common-library/src/main/java/com/bharat/common/constants/AppConstants.java
 /Users/bharatprasad/Documents/enterprise-rag-platform/common-library/src/main/java/com/bharat/common/exception/BadRequestException.java
 /Users/bharatprasad/Documents/enterprise-rag-platform/common-library/src/main/java/com/bharat/common/exception/BaseException.java
+/Users/bharatprasad/Documents/enterprise-rag-platform/common-library/src/main/java/com/bharat/common/exception/ConflictException.java
 /Users/bharatprasad/Documents/enterprise-rag-platform/common-library/src/main/java/com/bharat/common/exception/ResourceNotFoundException.java
 /Users/bharatprasad/Documents/enterprise-rag-platform/common-library/src/main/java/com/bharat/common/exception/UnauthorizedException.java
 /Users/bharatprasad/Documents/enterprise-rag-platform/common-library/src/main/java/com/bharat/common/response/ApiResponse.java
