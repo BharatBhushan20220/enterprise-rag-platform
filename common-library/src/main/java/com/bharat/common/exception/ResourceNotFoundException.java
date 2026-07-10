@@ -3,7 +3,7 @@ package com.bharat.common.exception;
 public class ResourceNotFoundException extends BaseException{
 
 
-    protected ResourceNotFoundException(String message) {
+    public ResourceNotFoundException(String message) {
         super(message, 404);
     }
 }
