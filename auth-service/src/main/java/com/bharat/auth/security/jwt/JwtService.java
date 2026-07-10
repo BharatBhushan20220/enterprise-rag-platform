@@ -41,4 +41,11 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    public String extractEmail(String jwtToken) {
+        return null;
+    }
+
+    public boolean isTokenValid(String jwtToken, String username) {
+        return true;
+    }
 }

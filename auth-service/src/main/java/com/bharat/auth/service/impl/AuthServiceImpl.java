@@ -1,4 +1,4 @@
-package com.bharat.auth.service;
+package com.bharat.auth.service.impl;
 
 import com.bharat.auth.dto.request.LoginRequest;
 import com.bharat.auth.dto.request.RegisterRequest;
@@ -9,11 +9,11 @@ import com.bharat.auth.mapper.UserMapper;
 import com.bharat.auth.repository.UserRepository;
 import com.bharat.auth.security.jwt.JwtProperties;
 import com.bharat.auth.security.jwt.JwtService;
+import com.bharat.auth.service.AuthService;
 import com.bharat.common.exception.ResourceNotFoundException;
 import com.bharat.common.exception.UnauthorizedException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = userMapper.toEntity(request);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         User saveUser = userRepository.save(user);
 

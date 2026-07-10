@@ -22,7 +22,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ApiResponse<RegisterResponse> register(@Valid @RequestBody RegisterRequest registerRequest) throws BadRequestException {
+    public ApiResponse<RegisterResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
 
         RegisterResponse response = authService.register(registerRequest);
         return ApiResponse.<RegisterResponse>builder()
