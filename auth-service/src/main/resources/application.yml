@@ -29,3 +29,7 @@ management:
 logging:
   level:
     org.hibernate.SQL: DEBUG
+
+jwt:
+  secret: "q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII="
+  expiration: 86400000

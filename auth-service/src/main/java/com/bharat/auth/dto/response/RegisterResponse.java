@@ -3,7 +3,6 @@ package com.bharat.auth.dto.response;
 import com.bharat.auth.entity.Role;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.UUID;
 
