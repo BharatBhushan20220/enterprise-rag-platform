@@ -10,7 +10,7 @@ import com.bharat.auth.repository.UserRepository;
 import com.bharat.auth.security.jwt.JwtProperties;
 import com.bharat.auth.security.jwt.JwtService;
 import com.bharat.auth.service.AuthService;
-import com.bharat.common.exception.ResourceNotFoundException;
+import com.bharat.common.exception.ConflictException;
 import com.bharat.common.exception.UnauthorizedException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public RegisterResponse register(RegisterRequest request) {
         if(userRepository.existsByEmail(request.getEmail())){
-            throw new ResourceNotFoundException("Email already registered.");
+            throw new ConflictException("Email already registered.");
         }
 
         User user = userMapper.toEntity(request);
