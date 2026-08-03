@@ -16,6 +16,7 @@ public class UserMapper {
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setRole(Role.USER);
+        user.setEmailVerified(false);
         return user;
     }
 
@@ -36,6 +37,9 @@ public class UserMapper {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .emailVerified(user.isEmailVerified())
+                .enabled(user.isEnabled())
+                .accountNonLocked(user.isAccountNonLocked())
                 .build();
     }
 }

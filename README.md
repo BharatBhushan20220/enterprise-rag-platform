@@ -8,10 +8,10 @@ Java 21 / Spring Boot 3 multi-module microservices platform for an enterprise AI
 |---|---|---|
 | `common-library` | — | Shared DTOs, exceptions, BaseEntity, correlation filter, vector utils |
 | `api-gateway` | 8080 | Edge routing + JWT validation |
-| `auth-service` | 8081 | Register / login / refresh / logout / JWT /me |
+| `auth-service` | 8081 | Auth, refresh/logout, email verify, password reset, admin APIs |
 | `document-service` | 8082 | Multipart upload, PDF/text extract, chunk, embed, index |
 | `embedding-service` | 8083 | Stub or OpenAI embeddings |
-| `search-service` | 8084 | Chunk index + cosine similarity search (pgvector-ready) |
+| `search-service` | 8084 | Cosine search + native pgvector IVFFlat |
 | `chat-service` | 8085 | RAG ask (retrieve + LLM stub/OpenAI) + session history |
 
 ## Build & test
@@ -26,28 +26,26 @@ Java 21 / Spring Boot 3 multi-module microservices platform for an enterprise AI
 docker compose -f docker/docker-compose.yml up --build
 ```
 
-Optional OpenAI:
+Includes Postgres (pgvector), Redis, and all services.
 
-```bash
-export OPENAI_API_KEY=sk-...
-# then set EMBEDDING_PROVIDER=openai and LLM_PROVIDER=openai in compose/env
-```
+Bootstrap admin (Docker default):
+- email: `admin@example.com`
+- password: `Admin@12345`
 
-## End-to-end flow
+## Auth APIs
 
-1. Register/login via gateway `POST /api/v1/auth/login`
-2. Upload document `POST /api/v1/documents/upload` (multipart) with Bearer token
-3. Ask `POST /api/v1/chat/ask` with `{ "sessionId": "...", "question": "..." }`
+- `POST /api/v1/auth/register|login|refresh|logout`
+- `POST /api/v1/auth/verify-email?token=`
+- `POST /api/v1/auth/resend-verification`
+- `POST /api/v1/auth/forgot-password`
+- `POST /api/v1/auth/reset-password`
+- `GET  /api/v1/admin/users` (ADMIN)
+- `PATCH /api/v1/admin/users/{id}/role|status` (ADMIN)
 
-## Auth extras
+## Useful env flags
 
-- `POST /api/v1/auth/refresh` — rotate refresh token
-- `POST /api/v1/auth/logout` — revoke refresh + blacklist access token
-- Login/register rate limited (20 req/min/IP)
-
-## Configuration highlights
-
-- `JWT_SECRET`, `DB_*`, `OPENAI_API_KEY`
-- `EMBEDDING_PROVIDER=stub|openai`
-- `LLM_PROVIDER=stub|openai`
-- `GATEWAY_JWT_ENABLED=true`
+- `REDIS_ENABLED=true` + `REDIS_HOST`
+- `SEARCH_PGVECTOR_ENABLED=true`
+- `AUTH_REQUIRE_EMAIL_VERIFICATION=true`
+- `MAIL_PROVIDER=logging|smtp`
+- `EMBEDDING_PROVIDER` / `LLM_PROVIDER` = `stub|openai`

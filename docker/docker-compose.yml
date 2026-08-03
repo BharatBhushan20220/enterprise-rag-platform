@@ -16,6 +16,17 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: rag-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   auth-service:
     build:
       context: ..
@@ -28,10 +39,20 @@ services:
       DB_PASSWORD: postgres
       JWT_SECRET: q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII=
       CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080
+      REDIS_ENABLED: "true"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MAIL_PROVIDER: logging
+      AUTH_BOOTSTRAP_ADMIN_ENABLED: "true"
+      AUTH_BOOTSTRAP_ADMIN_EMAIL: admin@example.com
+      AUTH_BOOTSTRAP_ADMIN_PASSWORD: Admin@12345
+      APP_BASE_URL: http://localhost:8080
     ports:
       - "8081:8081"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   document-service:
@@ -82,6 +103,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/search_db
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
+      SEARCH_PGVECTOR_ENABLED: "true"
     ports:
       - "8084:8084"
     depends_on:

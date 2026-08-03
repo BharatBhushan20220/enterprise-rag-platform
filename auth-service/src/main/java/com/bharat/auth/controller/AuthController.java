@@ -1,8 +1,11 @@
 package com.bharat.auth.controller;
 
+import com.bharat.auth.dto.request.ForgotPasswordRequest;
 import com.bharat.auth.dto.request.LoginRequest;
 import com.bharat.auth.dto.request.RefreshTokenRequest;
 import com.bharat.auth.dto.request.RegisterRequest;
+import com.bharat.auth.dto.request.ResendVerificationRequest;
+import com.bharat.auth.dto.request.ResetPasswordRequest;
 import com.bharat.auth.dto.response.LoginResponse;
 import com.bharat.auth.dto.response.RegisterResponse;
 import com.bharat.auth.dto.response.UserResponse;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -56,5 +60,29 @@ public class AuthController {
     @GetMapping("/me")
     public ApiResponse<UserResponse> me(Authentication authentication) {
         return ApiResponse.ok(authService.me(authentication.getName()), "Current user profile");
+    }
+
+    @PostMapping("/verify-email")
+    public ApiResponse<Void> verifyEmail(@RequestParam("token") String token) {
+        authService.verifyEmail(token);
+        return ApiResponse.ok(null, "Email verified successfully");
+    }
+
+    @PostMapping("/resend-verification")
+    public ApiResponse<Void> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
+        authService.resendVerification(request);
+        return ApiResponse.ok(null, "Verification email sent");
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ApiResponse.ok(null, "If the email exists, a reset token has been sent");
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ApiResponse.ok(null, "Password reset successfully");
     }
 }

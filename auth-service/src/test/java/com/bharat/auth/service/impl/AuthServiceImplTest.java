@@ -7,11 +7,14 @@ import com.bharat.auth.dto.response.RegisterResponse;
 import com.bharat.auth.entity.Role;
 import com.bharat.auth.entity.User;
 import com.bharat.auth.mapper.UserMapper;
+import com.bharat.auth.repository.EmailVerificationTokenRepository;
+import com.bharat.auth.repository.PasswordResetTokenRepository;
 import com.bharat.auth.repository.RefreshTokenRepository;
 import com.bharat.auth.repository.UserRepository;
 import com.bharat.auth.security.TokenBlacklistService;
 import com.bharat.auth.security.jwt.JwtProperties;
 import com.bharat.auth.security.jwt.JwtService;
+import com.bharat.auth.service.EmailNotificationService;
 import com.bharat.common.exception.ConflictException;
 import com.bharat.common.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -43,6 +47,12 @@ class AuthServiceImplTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
+    private EmailVerificationTokenRepository emailVerificationTokenRepository;
+
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -57,6 +67,9 @@ class AuthServiceImplTest {
     @Mock
     private TokenBlacklistService tokenBlacklistService;
 
+    @Mock
+    private EmailNotificationService emailNotificationService;
+
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -66,6 +79,10 @@ class AuthServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(authService, "requireEmailVerification", false);
+        ReflectionTestUtils.setField(authService, "verificationTokenTtlHours", 24L);
+        ReflectionTestUtils.setField(authService, "resetTokenTtlHours", 2L);
+
         registerRequest = new RegisterRequest();
         registerRequest.setFirstName("Bharat");
         registerRequest.setLastName("Prasad");
@@ -83,6 +100,7 @@ class AuthServiceImplTest {
         user.setEmail("bharat@example.com");
         user.setPassword("encoded-password");
         user.setRole(Role.USER);
+        user.setEmailVerified(true);
     }
 
     @Test
@@ -100,6 +118,7 @@ class AuthServiceImplTest {
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("encoded-password");
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(expectedResponse);
+        when(emailVerificationTokenRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         RegisterResponse response = authService.register(registerRequest);
 
@@ -107,6 +126,7 @@ class AuthServiceImplTest {
         assertThat(response.getRole()).isEqualTo(Role.USER);
         verify(passwordEncoder).encode("password123");
         verify(userRepository).save(user);
+        verify(emailNotificationService).sendEmailVerification(anyString(), anyString());
     }
 
     @Test

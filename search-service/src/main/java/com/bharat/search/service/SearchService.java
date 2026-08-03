@@ -11,6 +11,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,15 +20,20 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class SearchService {
 
     private final SearchChunkRepository searchChunkRepository;
     private final ObjectMapper objectMapper;
     private final JdbcTemplate jdbcTemplate;
+
+    @Value("${search.pgvector-enabled:false}")
+    private boolean pgvectorEnabled;
 
     public SearchHitResponse index(IndexChunkRequest request) {
         if (request.getEmbedding() == null || request.getEmbedding().isEmpty()) {
@@ -41,16 +48,23 @@ public class SearchService {
         chunk.setEmbeddingJson(writeEmbedding(request.getEmbedding()));
         SearchChunk saved = searchChunkRepository.save(chunk);
 
-        trySyncPgVector(saved.getId(), request.getEmbedding());
+        syncPgVector(saved.getId(), request.getEmbedding());
         return toHit(saved, 1.0);
     }
 
     @Transactional(readOnly = true)
     public List<SearchHitResponse> search(SearchRequest request) {
-        List<SearchChunk> chunks = searchChunkRepository.findAll();
         if (request.getQueryEmbedding() != null && !request.getQueryEmbedding().isEmpty()) {
-            return chunks.stream()
-                    .map(chunk -> toHit(chunk, VectorMath.cosineSimilarity(request.getQueryEmbedding(), readEmbedding(chunk.getEmbeddingJson()))))
+            if (pgvectorEnabled) {
+                List<SearchHitResponse> nativeHits = searchWithPgVector(request.getQueryEmbedding(), request.getTopK());
+                if (!nativeHits.isEmpty()) {
+                    return nativeHits;
+                }
+            }
+            return searchChunkRepository.findAll().stream()
+                    .map(chunk -> toHit(chunk, VectorMath.cosineSimilarity(
+                            request.getQueryEmbedding(),
+                            readEmbedding(chunk.getEmbeddingJson()))))
                     .sorted(Comparator.comparingDouble(SearchHitResponse::getScore).reversed())
                     .limit(request.getTopK())
                     .toList();
@@ -61,7 +75,7 @@ public class SearchService {
         }
 
         String query = request.getQuery().toLowerCase(Locale.ROOT);
-        return chunks.stream()
+        return searchChunkRepository.findAll().stream()
                 .filter(chunk -> chunk.getContent().toLowerCase(Locale.ROOT).contains(query))
                 .map(chunk -> toHit(chunk, keywordScore(chunk.getContent(), query)))
                 .sorted(Comparator.comparingDouble(SearchHitResponse::getScore).reversed())
@@ -69,12 +83,48 @@ public class SearchService {
                 .toList();
     }
 
-    private void trySyncPgVector(java.util.UUID id, List<Float> embedding) {
+    private List<SearchHitResponse> searchWithPgVector(List<Float> queryEmbedding, int topK) {
+        try {
+            String literal = toPgVectorLiteral(queryEmbedding);
+            return jdbcTemplate.query(
+                    """
+                            SELECT id, document_id, chunk_index, content,
+                                   (1 - (embedding <=> CAST(? AS vector))) AS score
+                            FROM search_chunks
+                            WHERE embedding IS NOT NULL
+                            ORDER BY embedding <=> CAST(? AS vector)
+                            LIMIT ?
+                            """,
+                    (rs, rowNum) -> SearchHitResponse.builder()
+                            .chunkId(UUID.fromString(rs.getString("id")))
+                            .documentId(UUID.fromString(rs.getString("document_id")))
+                            .chunkIndex(rs.getInt("chunk_index"))
+                            .content(rs.getString("content"))
+                            .score(rs.getDouble("score"))
+                            .build(),
+                    literal,
+                    literal,
+                    topK
+            );
+        } catch (Exception ex) {
+            log.warn("Native pgvector search failed, falling back to in-memory cosine: {}", ex.getMessage());
+            return List.of();
+        }
+    }
+
+    private void syncPgVector(UUID id, List<Float> embedding) {
+        if (!pgvectorEnabled) {
+            return;
+        }
         try {
             String literal = toPgVectorLiteral(embedding);
-            jdbcTemplate.update("UPDATE search_chunks SET embedding = CAST(? AS vector) WHERE id = ?", literal, id);
-        } catch (Exception ignored) {
-            // pgvector column may not exist in local/H2 environments
+            jdbcTemplate.update(
+                    "UPDATE search_chunks SET embedding = CAST(? AS vector) WHERE id = ?",
+                    literal,
+                    id
+            );
+        } catch (Exception ex) {
+            log.warn("Unable to sync pgvector embedding for {}: {}", id, ex.getMessage());
         }
     }
 
