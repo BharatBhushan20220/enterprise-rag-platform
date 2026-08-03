@@ -65,8 +65,7 @@ Notes:
 docker compose -f docker/docker-compose.yml up --build
 ```
 
-(Requires free host port `5432`.)
-
+Docker Postgres is published on host port **5433** (not 5432), so it won't clash with local Postgres.
 ## Full Docker UI
 
 Frontend container: **http://localhost:8088**
