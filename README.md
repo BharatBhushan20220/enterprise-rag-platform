@@ -35,13 +35,16 @@ Agar password prompt aaye / user alag ho:
 psql -U <your_user> -d postgres -f docker/postgres/local-init.sql
 ```
 
-**2. Start services (Docker Postgres skip):**
+**2. Start services (Docker Postgres skip / host DB):**
 
 ```bash
 export DB_USERNAME=postgres
 export DB_PASSWORD=postgres   # apna local password
 docker compose -f docker/docker-compose.yml -f docker/docker-compose.local-db.yml up --build
 ```
+
+Yeh override Postgres container ko no-port stub bana deta hai, aur services
+`host.docker.internal:5432` (local Mac Postgres) use karti hain.
 
 **3. Frontend:**
 
