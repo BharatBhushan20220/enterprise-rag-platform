@@ -4,10 +4,13 @@ import com.bharat.auth.dto.request.LoginRequest;
 import com.bharat.auth.dto.request.RegisterRequest;
 import com.bharat.auth.dto.response.LoginResponse;
 import com.bharat.auth.dto.response.RegisterResponse;
+import com.bharat.auth.dto.response.UserResponse;
 import com.bharat.auth.service.AuthService;
 import com.bharat.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,25 +25,16 @@ public class AuthController {
 
     @PostMapping("/register")
     public ApiResponse<RegisterResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
-
-        RegisterResponse response = authService.register(registerRequest);
-        return ApiResponse.<RegisterResponse>builder()
-                .success(true)
-                .message("User registered successfully.")
-                .data(response)
-                .build();
+        return ApiResponse.ok(authService.register(registerRequest), "User registered successfully.");
     }
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request) {
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ApiResponse.ok(authService.login(request), "Login successful");
+    }
 
-        LoginResponse response = authService.login(request);
-
-        return ApiResponse.<LoginResponse>builder()
-                .success(true)
-                .message("Login successful")
-                .data(response)
-                .build();
+    @GetMapping("/me")
+    public ApiResponse<UserResponse> me(Authentication authentication) {
+        return ApiResponse.ok(authService.me(authentication.getName()), "Current user profile");
     }
 }

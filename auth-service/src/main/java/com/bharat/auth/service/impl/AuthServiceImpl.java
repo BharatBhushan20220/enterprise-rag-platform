@@ -4,6 +4,7 @@ import com.bharat.auth.dto.request.LoginRequest;
 import com.bharat.auth.dto.request.RegisterRequest;
 import com.bharat.auth.dto.response.LoginResponse;
 import com.bharat.auth.dto.response.RegisterResponse;
+import com.bharat.auth.dto.response.UserResponse;
 import com.bharat.auth.entity.User;
 import com.bharat.auth.mapper.UserMapper;
 import com.bharat.auth.repository.UserRepository;
@@ -11,6 +12,7 @@ import com.bharat.auth.security.jwt.JwtProperties;
 import com.bharat.auth.security.jwt.JwtService;
 import com.bharat.auth.service.AuthService;
 import com.bharat.common.exception.ConflictException;
+import com.bharat.common.exception.ResourceNotFoundException;
 import com.bharat.common.exception.UnauthorizedException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +30,9 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
 
-
     @Override
     public RegisterResponse register(RegisterRequest request) {
-        if(userRepository.existsByEmail(request.getEmail())){
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new ConflictException("Email already registered.");
         }
 
@@ -39,29 +40,33 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         User saveUser = userRepository.save(user);
-
         return userMapper.toResponse(saveUser);
     }
 
     @Override
-    public LoginResponse login(LoginRequest request){
+    public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new UnauthorizedException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
         boolean passwordMatches = passwordEncoder.matches(request.getPassword(), user.getPassword());
-        if(!passwordMatches){
+        if (!passwordMatches) {
             throw new UnauthorizedException("Invalid email or password.");
         }
 
-        String accessToken = jwtService.generateToken(
-                user.getEmail()
-        );
+        String accessToken = jwtService.generateToken(user.getEmail());
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtProperties.getExpiration())
                 .build();
+    }
+
+    @Override
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public UserResponse me(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return userMapper.toUserResponse(user);
     }
 }

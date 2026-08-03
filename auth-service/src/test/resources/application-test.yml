@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:auth_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:auth_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -10,11 +10,18 @@ spring:
       ddl-auto: create-drop
     database-platform: org.hibernate.dialect.H2Dialect
     show-sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: false
 
 jwt:
-  secret: "q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII="
+  secret: ${JWT_SECRET:q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII=}
   expiration: 86400000
 
 logging:
   level:
     org.hibernate.SQL: WARN
+
+cors:
+  allowed-origins: http://localhost:3000

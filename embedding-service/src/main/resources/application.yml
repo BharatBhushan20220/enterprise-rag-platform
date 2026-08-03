@@ -1,0 +1,15 @@
+server:
+  port: ${SERVER_PORT:8083}
+
+spring:
+  application:
+    name: embedding-service
+
+embedding:
+  dimensions: ${EMBEDDING_DIMENSIONS:384}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

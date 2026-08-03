@@ -9,6 +9,11 @@ public abstract class BaseException extends RuntimeException {
         this.statusCode = statusCode;
     }
 
+    protected BaseException(String message, int statusCode, Throwable cause) {
+        super(message, cause);
+        this.statusCode = statusCode;
+    }
+
     public int getStatusCode() {
         return statusCode;
     }

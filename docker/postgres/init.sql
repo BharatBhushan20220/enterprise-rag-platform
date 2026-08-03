@@ -1,7 +1,4 @@
 CREATE DATABASE auth_db;
-
 CREATE DATABASE chat_db;
-
 CREATE DATABASE document_db;
-
 CREATE DATABASE search_db;
