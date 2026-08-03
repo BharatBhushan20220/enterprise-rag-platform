@@ -1,0 +1,57 @@
+# Use with local Postgres on the host (avoids Docker binding :5432).
+#
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.local-db.yml up --build
+#
+# Before first run, create DBs (see docker/postgres/local-init.sql).
+
+services:
+  postgres:
+    profiles: ["disabled"]
+
+  auth-service:
+    environment:
+      DB_URL: jdbc:postgresql://host.docker.internal:5432/auth_db
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  document-service:
+    environment:
+      DB_URL: jdbc:postgresql://host.docker.internal:5432/document_db
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      embedding-service:
+        condition: service_started
+      search-service:
+        condition: service_started
+
+  search-service:
+    environment:
+      DB_URL: jdbc:postgresql://host.docker.internal:5432/search_db
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Set true only if pgvector extension is installed locally
+      SEARCH_PGVECTOR_ENABLED: ${SEARCH_PGVECTOR_ENABLED:-false}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on: []
+
+  chat-service:
+    environment:
+      DB_URL: jdbc:postgresql://host.docker.internal:5432/chat_db
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      search-service:
+        condition: service_started
+      embedding-service:
+        condition: service_started

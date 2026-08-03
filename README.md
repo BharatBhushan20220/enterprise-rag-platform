@@ -21,23 +21,52 @@ Java 21 / Spring Boot 3 multi-module backend + React (Vite) frontend (**Aether**
 ./mvnw clean test
 ```
 
-## Frontend (local)
+## Run with local Postgres (recommended on Mac if :5432 is busy)
+
+**1. Create databases once** (user/password apne local Postgres ke hisaab se):
 
 ```bash
-# terminal 1: backend stack (or at least gateway + services)
-docker compose -f docker/docker-compose.yml up --build
-
-# terminal 2: UI
-cd frontend
-npm install
-npm run dev
+psql -U postgres -d postgres -f docker/postgres/local-init.sql
 ```
 
-Open `http://localhost:5173`. Vite proxies `/api` → gateway `:8080`.
+Agar password prompt aaye / user alag ho:
+
+```bash
+psql -U <your_user> -d postgres -f docker/postgres/local-init.sql
+```
+
+**2. Start services (Docker Postgres skip):**
+
+```bash
+export DB_USERNAME=postgres
+export DB_PASSWORD=postgres   # apna local password
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.local-db.yml up --build
+```
+
+**3. Frontend:**
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+Open `http://localhost:5173`.
+
+Notes:
+- Containers host DB ko `host.docker.internal:5432` se hit karte hain
+- Redis abhi bhi Docker mein chalega
+- Local pe pgvector na ho to `SEARCH_PGVECTOR_ENABLED=false` (default in local-db override)
+
+## Run with Docker Postgres
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
+
+(Requires free host port `5432`.)
 
 ## Full Docker UI
 
-Frontend is included in Compose on **http://localhost:8088** (nginx → gateway).
+Frontend container: **http://localhost:8088**
 
 Bootstrap admin: `admin@example.com` / `Admin@12345`
 
