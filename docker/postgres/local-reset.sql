@@ -1,5 +1,8 @@
--- Wipe and recreate local RAG databases (fixes Flyway:
--- "Found non-empty schema(s) public but no schema history table").
+-- Wipe and recreate local RAG databases.
+-- Fixes Flyway errors like:
+--   Found non-empty schema(s) "public" but no schema history table
+--   ERROR: relation "users" already exists
+--   Migration checksum mismatch / failed migration
 --
 -- WARNING: deletes all local auth/chat/document/search data.
 --

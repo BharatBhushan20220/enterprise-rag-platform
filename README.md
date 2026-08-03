@@ -35,11 +35,15 @@ Agar password prompt aaye / user alag ho:
 psql -U <your_user> -d postgres -f docker/postgres/local-init.sql
 ```
 
-If auth-service fails with `Found non-empty schema(s) "public" but no schema history table`,
-the DB has leftover tables without Flyway history — reset and recreate:
+If auth-service fails with Flyway errors (`non-empty schema`, `relation "users" already exists`,
+failed migration), **stop containers that use the DB**, then reset:
 
 ```bash
+# stop auth so it releases DB connections
+docker stop rag-auth-service 2>/dev/null || true
 psql -U postgres -d postgres -f docker/postgres/local-reset.sql
+# or auth only:
+# psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS auth_db WITH (FORCE); CREATE DATABASE auth_db;"
 ```
 
 **2. Start services (Docker Postgres skip / host DB):**
