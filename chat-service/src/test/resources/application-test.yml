@@ -13,3 +13,8 @@ spring:
 
 rag:
   search-service-url: http://localhost:8084
+  embedding-service-url: http://localhost:8083
+  embedding-model: stub
+
+llm:
+  provider: stub

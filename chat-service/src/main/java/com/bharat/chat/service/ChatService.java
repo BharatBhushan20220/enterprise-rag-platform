@@ -5,29 +5,48 @@ import com.bharat.chat.dto.ChatAskResponse;
 import com.bharat.chat.entity.ChatMessage;
 import com.bharat.chat.repository.ChatMessageRepository;
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final RestClient searchRestClient;
+    private final RestClient embeddingRestClient;
+    private final LlmProvider llmProvider;
+    private final String embeddingModel;
+
+    public ChatService(
+            ChatMessageRepository chatMessageRepository,
+            @Qualifier("searchRestClient") RestClient searchRestClient,
+            @Qualifier("embeddingRestClient") RestClient embeddingRestClient,
+            LlmProvider llmProvider,
+            @Value("${rag.embedding-model:text-embedding-3-small}") String embeddingModel) {
+        this.chatMessageRepository = chatMessageRepository;
+        this.searchRestClient = searchRestClient;
+        this.embeddingRestClient = embeddingRestClient;
+        this.llmProvider = llmProvider;
+        this.embeddingModel = embeddingModel;
+    }
 
     public ChatAskResponse ask(ChatAskRequest request) {
         List<String> sources = retrieveSources(request.getQuestion());
-        String answer = buildAnswer(request.getQuestion(), sources);
+        String systemPrompt = "You are an enterprise knowledge assistant. Answer only using the provided context. "
+                + "If context is insufficient, say you do not know.";
+        String userPrompt = buildUserPrompt(request.getQuestion(), sources);
+        String answer = llmProvider.generate(systemPrompt, userPrompt);
 
         ChatMessage message = new ChatMessage();
         message.setSessionId(request.getSessionId());
@@ -62,9 +81,15 @@ public class ChatService {
 
     private List<String> retrieveSources(String question) {
         try {
+            List<Float> queryEmbedding = embedQuery(question);
+            Map<String, Object> body = new HashMap<>();
+            body.put("query", question);
+            body.put("queryEmbedding", queryEmbedding);
+            body.put("topK", 3);
+
             JsonNode response = searchRestClient.post()
                     .uri("/api/v1/search")
-                    .body(Map.of("query", question, "topK", 3))
+                    .body(body)
                     .retrieve()
                     .body(JsonNode.class);
 
@@ -83,12 +108,34 @@ public class ChatService {
         }
     }
 
-    private String buildAnswer(String question, List<String> sources) {
-        if (sources.isEmpty()) {
-            return "I could not find relevant knowledge-base context for: \"" + question
-                    + "\". Index documents first, then retry.";
+    private List<Float> embedQuery(String question) {
+        Map<String, Object> body = Map.of(
+                "texts", List.of(question),
+                "model", embeddingModel
+        );
+        JsonNode response = embeddingRestClient.post()
+                .uri("/api/v1/embeddings")
+                .body(body)
+                .retrieve()
+                .body(JsonNode.class);
+        List<Float> vector = new ArrayList<>();
+        if (response != null) {
+            response.path("data").path("embeddings").path(0)
+                    .forEach(value -> vector.add(value.floatValue()));
         }
-        String context = sources.stream().limit(3).collect(Collectors.joining(" | "));
-        return "Based on retrieved context: " + context + ". Question answered: " + question;
+        return vector;
+    }
+
+    private String buildUserPrompt(String question, List<String> sources) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Question: ").append(question).append("\n\nContext:\n");
+        if (sources.isEmpty()) {
+            builder.append("- No context found.\n");
+        } else {
+            for (int i = 0; i < sources.size(); i++) {
+                builder.append(i + 1).append(". ").append(sources.get(i)).append("\n");
+            }
+        }
+        return builder.toString();
     }
 }

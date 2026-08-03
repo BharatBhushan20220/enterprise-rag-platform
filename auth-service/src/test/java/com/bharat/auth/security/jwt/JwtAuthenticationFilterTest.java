@@ -1,5 +1,6 @@
 package com.bharat.auth.security.jwt;
 
+import com.bharat.auth.security.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,9 @@ class JwtAuthenticationFilterTest {
 
     @Mock
     private UserDetailsService userDetailsService;
+
+    @Mock
+    private TokenBlacklistService tokenBlacklistService;
 
     @Mock
     private FilterChain filterChain;
@@ -83,6 +87,8 @@ class JwtAuthenticationFilterTest {
                 .build();
 
         request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        when(tokenBlacklistService.isBlacklisted(token)).thenReturn(false);
+        when(jwtService.isAccessToken(token)).thenReturn(true);
         when(jwtService.extractEmail(token)).thenReturn(email);
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
         when(jwtService.isTokenValid(token, email)).thenReturn(true);
@@ -106,6 +112,8 @@ class JwtAuthenticationFilterTest {
                 .build();
 
         request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        when(tokenBlacklistService.isBlacklisted(token)).thenReturn(false);
+        when(jwtService.isAccessToken(token)).thenReturn(true);
         when(jwtService.extractEmail(token)).thenReturn(email);
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
         when(jwtService.isTokenValid(token, email)).thenReturn(false);
@@ -121,6 +129,8 @@ class JwtAuthenticationFilterTest {
             throws ServletException, IOException {
         String token = "malformed.jwt.token";
         request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        when(tokenBlacklistService.isBlacklisted(token)).thenReturn(false);
+        when(jwtService.isAccessToken(token)).thenReturn(true);
         when(jwtService.extractEmail(token)).thenReturn(null);
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);

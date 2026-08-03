@@ -15,6 +15,7 @@ public class DocumentResponse {
     private String fileName;
     private String contentType;
     private long sizeBytes;
+    private int chunkCount;
     private Document.DocumentStatus status;
 
     public static DocumentResponse from(Document document) {
@@ -24,6 +25,7 @@ public class DocumentResponse {
                 .fileName(document.getFileName())
                 .contentType(document.getContentType())
                 .sizeBytes(document.getSizeBytes())
+                .chunkCount(document.getChunkCount())
                 .status(document.getStatus())
                 .build();
     }

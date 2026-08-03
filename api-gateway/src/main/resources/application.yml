@@ -43,6 +43,10 @@ spring:
           predicates:
             - Path=/api/v1/chat/**
 
+jwt:
+  secret: ${JWT_SECRET:q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII=}
+  enabled: ${GATEWAY_JWT_ENABLED:true}
+
 management:
   endpoints:
     web:

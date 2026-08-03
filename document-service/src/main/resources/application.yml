@@ -15,6 +15,20 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+document:
+  storage-path: ${DOCUMENT_STORAGE_PATH:./data/documents}
+  chunk-size: ${DOCUMENT_CHUNK_SIZE:800}
+  chunk-overlap: ${DOCUMENT_CHUNK_OVERLAP:120}
+
+rag:
+  embedding-service-url: ${EMBEDDING_SERVICE_URL:http://localhost:8083}
+  search-service-url: ${SEARCH_SERVICE_URL:http://localhost:8084}
+  embedding-model: ${EMBEDDING_MODEL:text-embedding-3-small}
 
 management:
   endpoints:

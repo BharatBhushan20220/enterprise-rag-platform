@@ -18,6 +18,16 @@ spring:
 
 rag:
   search-service-url: ${SEARCH_SERVICE_URL:http://localhost:8084}
+  embedding-service-url: ${EMBEDDING_SERVICE_URL:http://localhost:8083}
+  embedding-model: ${EMBEDDING_MODEL:text-embedding-3-small}
+
+llm:
+  provider: ${LLM_PROVIDER:stub}
+  model: ${LLM_MODEL:gpt-4o-mini}
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com}
 
 management:
   endpoints:

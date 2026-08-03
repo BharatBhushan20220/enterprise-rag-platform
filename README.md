@@ -6,19 +6,13 @@ Java 21 / Spring Boot 3 multi-module microservices platform for an enterprise AI
 
 | Module | Port | Description |
 |---|---|---|
-| `common-library` | — | Shared DTOs, exceptions, BaseEntity, exception handler auto-config |
-| `api-gateway` | 8080 | Spring Cloud Gateway edge routing |
-| `auth-service` | 8081 | Register / login / JWT / current user profile |
-| `document-service` | 8082 | Document metadata registration |
-| `embedding-service` | 8083 | Embedding generation (local deterministic stub) |
-| `search-service` | 8084 | Chunk indexing + keyword search (vector-ready schema) |
-| `chat-service` | 8085 | RAG ask + session history (retrieves from search-service) |
-
-## Prerequisites
-
-- JDK 21+
-- Maven 3.9+ (or use `./mvnw`)
-- Docker (optional, for full stack)
+| `common-library` | — | Shared DTOs, exceptions, BaseEntity, correlation filter, vector utils |
+| `api-gateway` | 8080 | Edge routing + JWT validation |
+| `auth-service` | 8081 | Register / login / refresh / logout / JWT /me |
+| `document-service` | 8082 | Multipart upload, PDF/text extract, chunk, embed, index |
+| `embedding-service` | 8083 | Stub or OpenAI embeddings |
+| `search-service` | 8084 | Chunk index + cosine similarity search (pgvector-ready) |
+| `chat-service` | 8085 | RAG ask (retrieve + LLM stub/OpenAI) + session history |
 
 ## Build & test
 
@@ -26,70 +20,34 @@ Java 21 / Spring Boot 3 multi-module microservices platform for an enterprise AI
 ./mvnw clean test
 ```
 
-## Run locally (without Docker)
-
-1. Start Postgres and create DBs (or use `docker compose` for Postgres only):
-
-```bash
-docker compose -f docker/docker-compose.yml up postgres -d
-```
-
-2. Run services (separate terminals):
-
-```bash
-./mvnw -pl auth-service spring-boot:run
-./mvnw -pl document-service spring-boot:run
-./mvnw -pl embedding-service spring-boot:run
-./mvnw -pl search-service spring-boot:run
-./mvnw -pl chat-service spring-boot:run
-./mvnw -pl api-gateway spring-boot:run
-```
-
-## Run full stack with Docker
+## Run with Docker
 
 ```bash
 docker compose -f docker/docker-compose.yml up --build
 ```
 
-Gateway: `http://localhost:8080`
-
-## Key auth APIs
+Optional OpenAI:
 
 ```bash
-# Register
-curl -s http://localhost:8080/api/v1/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"firstName":"Bharat","lastName":"Dev","email":"bharat@example.com","password":"password123"}'
-
-# Login
-curl -s http://localhost:8080/api/v1/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"bharat@example.com","password":"password123"}'
-
-# Me (Bearer token required)
-curl -s http://localhost:8080/api/v1/auth/me \
-  -H "Authorization: Bearer <token>"
+export OPENAI_API_KEY=sk-...
+# then set EMBEDDING_PROVIDER=openai and LLM_PROVIDER=openai in compose/env
 ```
 
-## Configuration
+## End-to-end flow
 
-Sensitive values are externalized via environment variables:
+1. Register/login via gateway `POST /api/v1/auth/login`
+2. Upload document `POST /api/v1/documents/upload` (multipart) with Bearer token
+3. Ask `POST /api/v1/chat/ask` with `{ "sessionId": "...", "question": "..." }`
 
-- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
-- `JWT_SECRET`, `JWT_EXPIRATION`
-- `CORS_ALLOWED_ORIGINS`
-- Service URLs for gateway / chat (`AUTH_SERVICE_URL`, `SEARCH_SERVICE_URL`, ...)
+## Auth extras
 
-## Architecture
+- `POST /api/v1/auth/refresh` — rotate refresh token
+- `POST /api/v1/auth/logout` — revoke refresh + blacklist access token
+- Login/register rate limited (20 req/min/IP)
 
-```
-Client → api-gateway:8080
-            ├─ /api/v1/auth/**        → auth-service:8081
-            ├─ /api/v1/documents/**   → document-service:8082
-            ├─ /api/v1/embeddings/**  → embedding-service:8083
-            ├─ /api/v1/search/**      → search-service:8084
-            └─ /api/v1/chat/**        → chat-service:8085
-                                          └─ retrieves from search-service
-```
+## Configuration highlights
 
-PostgreSQL databases: `auth_db`, `document_db`, `search_db`, `chat_db`.
+- `JWT_SECRET`, `DB_*`, `OPENAI_API_KEY`
+- `EMBEDDING_PROVIDER=stub|openai`
+- `LLM_PROVIDER=stub|openai`
+- `GATEWAY_JWT_ENABLED=true`

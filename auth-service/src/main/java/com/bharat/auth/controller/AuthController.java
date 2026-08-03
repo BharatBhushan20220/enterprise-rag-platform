@@ -1,6 +1,7 @@
 package com.bharat.auth.controller;
 
 import com.bharat.auth.dto.request.LoginRequest;
+import com.bharat.auth.dto.request.RefreshTokenRequest;
 import com.bharat.auth.dto.request.RegisterRequest;
 import com.bharat.auth.dto.response.LoginResponse;
 import com.bharat.auth.dto.response.RegisterResponse;
@@ -9,10 +10,12 @@ import com.bharat.auth.service.AuthService;
 import com.bharat.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,6 +34,23 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.ok(authService.login(request), "Login successful");
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ApiResponse.ok(authService.refresh(request), "Token refreshed");
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestBody(required = false) RefreshTokenRequest request) {
+        String accessToken = null;
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            accessToken = authorization.substring(7);
+        }
+        authService.logout(accessToken, request == null ? new RefreshTokenRequest() : request);
+        return ApiResponse.ok(null, "Logged out successfully");
     }
 
     @GetMapping("/me")

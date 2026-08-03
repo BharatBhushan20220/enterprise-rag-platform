@@ -14,6 +14,7 @@ class JwtServiceTest {
         JwtProperties jwtProperties = new JwtProperties();
         jwtProperties.setSecret("q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII=");
         jwtProperties.setExpiration(86400000L);
+        jwtProperties.setRefreshExpiration(604800000L);
         jwtService = new JwtService(jwtProperties);
     }
 
