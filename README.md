@@ -57,7 +57,7 @@ Open `http://localhost:5173`.
 Notes:
 - Containers host DB ko `host.docker.internal:5432` se hit karte hain
 - Redis abhi bhi Docker mein chalega
-- Local pe pgvector na ho to `SEARCH_PGVECTOR_ENABLED=false` (default in local-db override)
+- Local pe pgvector na ho to theek hai: Flyway V3 skips the extension, and `SEARCH_PGVECTOR_ENABLED=false` (default) uses JSON cosine search
 
 ## Run with Docker Postgres
 
