@@ -18,6 +18,7 @@ spring:
 jwt:
   secret: ${JWT_SECRET:q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII=}
   expiration: 86400000
+  refresh-expiration: 604800000
 
 logging:
   level:

@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +30,13 @@ public class Document extends BaseEntity {
 
     @Column(nullable = false)
     private String storagePath;
+
+    @Lob
+    @Column
+    private String extractedText;
+
+    @Column(nullable = false)
+    private int chunkCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

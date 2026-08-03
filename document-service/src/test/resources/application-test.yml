@@ -10,3 +10,13 @@ spring:
     open-in-view: false
   flyway:
     enabled: false
+
+document:
+  storage-path: ${java.io.tmpdir}/rag-docs-test
+  chunk-size: 50
+  chunk-overlap: 10
+
+rag:
+  embedding-service-url: http://localhost:8083
+  search-service-url: http://localhost:8084
+  embedding-model: stub

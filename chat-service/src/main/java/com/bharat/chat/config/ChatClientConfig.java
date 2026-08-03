@@ -8,10 +8,13 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class ChatClientConfig {
 
-    @Bean
+    @Bean(name = "searchRestClient")
     public RestClient searchRestClient(@Value("${rag.search-service-url}") String searchServiceUrl) {
-        return RestClient.builder()
-                .baseUrl(searchServiceUrl)
-                .build();
+        return RestClient.builder().baseUrl(searchServiceUrl).build();
+    }
+
+    @Bean(name = "embeddingRestClient")
+    public RestClient embeddingRestClient(@Value("${rag.embedding-service-url}") String embeddingServiceUrl) {
+        return RestClient.builder().baseUrl(embeddingServiceUrl).build();
     }
 }

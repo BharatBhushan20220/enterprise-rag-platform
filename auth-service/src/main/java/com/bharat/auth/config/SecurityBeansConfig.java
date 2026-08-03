@@ -1,5 +1,6 @@
 package com.bharat.auth.config;
 
+import com.bharat.auth.security.AuthRateLimitFilter;
 import com.bharat.auth.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,7 @@ import java.util.List;
 public class SecurityBeansConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthRateLimitFilter authRateLimitFilter;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -53,6 +55,7 @@ public class SecurityBeansConfig {
                                 .requestMatchers(
                                         "/api/v1/auth/register",
                                         "/api/v1/auth/login",
+                                        "/api/v1/auth/refresh",
                                         "/actuator/health",
                                         "/v3/api-docs/**",
                                         "/api-docs/**",
@@ -62,6 +65,7 @@ public class SecurityBeansConfig {
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()
                 )
+                .addFilterBefore(authRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

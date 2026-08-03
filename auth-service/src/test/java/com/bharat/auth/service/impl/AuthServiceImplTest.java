@@ -7,7 +7,9 @@ import com.bharat.auth.dto.response.RegisterResponse;
 import com.bharat.auth.entity.Role;
 import com.bharat.auth.entity.User;
 import com.bharat.auth.mapper.UserMapper;
+import com.bharat.auth.repository.RefreshTokenRepository;
 import com.bharat.auth.repository.UserRepository;
+import com.bharat.auth.security.TokenBlacklistService;
 import com.bharat.auth.security.jwt.JwtProperties;
 import com.bharat.auth.security.jwt.JwtService;
 import com.bharat.common.exception.ConflictException;
@@ -38,6 +40,9 @@ class AuthServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -48,6 +53,9 @@ class AuthServiceImplTest {
 
     @Mock
     private JwtProperties jwtProperties;
+
+    @Mock
+    private TokenBlacklistService tokenBlacklistService;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -117,12 +125,16 @@ class AuthServiceImplTest {
     void login_shouldReturnTokenWhenCredentialsAreValid() {
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())).thenReturn(true);
-        when(jwtService.generateToken(user.getEmail())).thenReturn("jwt-token");
+        when(jwtService.generateAccessToken(user.getEmail())).thenReturn("jwt-token");
+        when(jwtService.generateRefreshTokenValue(user.getEmail())).thenReturn("refresh-token");
         when(jwtProperties.getExpiration()).thenReturn(86400000L);
+        when(jwtProperties.getRefreshExpiration()).thenReturn(604800000L);
+        when(refreshTokenRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         LoginResponse response = authService.login(loginRequest);
 
         assertThat(response.getAccessToken()).isEqualTo("jwt-token");
+        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
         assertThat(response.getTokenType()).isEqualTo("Bearer");
         assertThat(response.getExpiresIn()).isEqualTo(86400000L);
     }
@@ -135,7 +147,7 @@ class AuthServiceImplTest {
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("Invalid email or password");
 
-        verify(jwtService, never()).generateToken(anyString());
+        verify(jwtService, never()).generateAccessToken(anyString());
     }
 
     @Test
@@ -147,6 +159,6 @@ class AuthServiceImplTest {
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("Invalid email or password.");
 
-        verify(jwtService, never()).generateToken(anyString());
+        verify(jwtService, never()).generateAccessToken(anyString());
     }
 }
