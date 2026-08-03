@@ -1,4 +1,6 @@
 # Use local Postgres on the Mac host (no Docker bind on :5432).
+# pgvector is NOT required — search-service V3 migration no-ops without it and
+# SEARCH_PGVECTOR_ENABLED defaults to false (in-memory cosine over embedding_json).
 #
 # Setup DBs once:
 #   psql -U postgres -d postgres -f docker/postgres/local-init.sql
