@@ -1,51 +1,49 @@
 # Enterprise RAG Platform
 
-Java 21 / Spring Boot 3 multi-module microservices platform for an enterprise AI knowledge assistant.
+Java 21 / Spring Boot 3 multi-module backend + React (Vite) frontend (**Aether**).
 
 ## Modules
 
 | Module | Port | Description |
 |---|---|---|
-| `common-library` | — | Shared DTOs, exceptions, BaseEntity, correlation filter, vector utils |
+| `frontend` | 5173 (dev) / 8088 (docker) | React UI for auth, documents, chat, admin |
 | `api-gateway` | 8080 | Edge routing + JWT validation |
-| `auth-service` | 8081 | Auth, refresh/logout, email verify, password reset, admin APIs |
-| `document-service` | 8082 | Multipart upload, PDF/text extract, chunk, embed, index |
+| `auth-service` | 8081 | Auth, refresh/logout, verify/reset, admin APIs |
+| `document-service` | 8082 | Upload/parse/chunk/index |
 | `embedding-service` | 8083 | Stub or OpenAI embeddings |
-| `search-service` | 8084 | Cosine search + native pgvector IVFFlat |
-| `chat-service` | 8085 | RAG ask (retrieve + LLM stub/OpenAI) + session history |
+| `search-service` | 8084 | Cosine + pgvector search |
+| `chat-service` | 8085 | RAG ask + history |
+| `common-library` | — | Shared types |
 
-## Build & test
+## Backend build
 
 ```bash
 ./mvnw clean test
 ```
 
-## Run with Docker
+## Frontend (local)
 
 ```bash
+# terminal 1: backend stack (or at least gateway + services)
 docker compose -f docker/docker-compose.yml up --build
+
+# terminal 2: UI
+cd frontend
+npm install
+npm run dev
 ```
 
-Includes Postgres (pgvector), Redis, and all services.
+Open `http://localhost:5173`. Vite proxies `/api` → gateway `:8080`.
 
-Bootstrap admin (Docker default):
-- email: `admin@example.com`
-- password: `Admin@12345`
+## Full Docker UI
 
-## Auth APIs
+Frontend is included in Compose on **http://localhost:8088** (nginx → gateway).
 
-- `POST /api/v1/auth/register|login|refresh|logout`
-- `POST /api/v1/auth/verify-email?token=`
-- `POST /api/v1/auth/resend-verification`
-- `POST /api/v1/auth/forgot-password`
-- `POST /api/v1/auth/reset-password`
-- `GET  /api/v1/admin/users` (ADMIN)
-- `PATCH /api/v1/admin/users/{id}/role|status` (ADMIN)
+Bootstrap admin: `admin@example.com` / `Admin@12345`
 
-## Useful env flags
+## UI features
 
-- `REDIS_ENABLED=true` + `REDIS_HOST`
-- `SEARCH_PGVECTOR_ENABLED=true`
-- `AUTH_REQUIRE_EMAIL_VERIFICATION=true`
-- `MAIL_PROVIDER=logging|smtp`
-- `EMBEDDING_PROVIDER` / `LLM_PROVIDER` = `stub|openai`
+- Sign in / register / forgot + reset password
+- Chat with session history
+- Document upload (PDF/text) + library status
+- Admin user role/status management
