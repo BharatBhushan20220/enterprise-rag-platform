@@ -26,3 +26,14 @@ logging:
 
 cors:
   allowed-origins: http://localhost:3000
+
+redis:
+  enabled: false
+
+mail:
+  provider: logging
+
+auth:
+  require-email-verification: false
+  bootstrap-admin:
+    enabled: false
