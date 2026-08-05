@@ -1,6 +1,8 @@
 package com.bharat.common.config;
 
 import com.bharat.common.constants.AppConstants;
+import com.bharat.common.exception.GlobalExceptionHandler;
+import com.bharat.common.logging.RequestLoggingFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +17,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.bharat.common.exception.GlobalExceptionHandler;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -38,12 +39,12 @@ public class CommonWebAutoConfiguration {
                 if (correlationId == null || correlationId.isBlank()) {
                     correlationId = UUID.randomUUID().toString();
                 }
-                MDC.put(AppConstants.CORRELATION_ID_HEADER, correlationId);
+                MDC.put(AppConstants.CORRELATION_ID_MDC_KEY, correlationId);
                 response.setHeader(AppConstants.CORRELATION_ID_HEADER, correlationId);
                 try {
                     filterChain.doFilter(request, response);
                 } finally {
-                    MDC.remove(AppConstants.CORRELATION_ID_HEADER);
+                    MDC.remove(AppConstants.CORRELATION_ID_MDC_KEY);
                 }
             }
         };
@@ -51,6 +52,15 @@ public class CommonWebAutoConfiguration {
         FilterRegistrationBean<OncePerRequestFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(filter);
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        registration.addUrlPatterns("/*");
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<RequestLoggingFilter> requestLoggingFilter() {
+        FilterRegistrationBean<RequestLoggingFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new RequestLoggingFilter());
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
         registration.addUrlPatterns("/*");
         return registration;
     }

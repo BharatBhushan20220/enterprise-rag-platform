@@ -39,7 +39,11 @@ management:
         include: health,info
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%thread] [%X{correlationId}] %logger{36} - %msg%n"
   level:
+    root: INFO
+    com.bharat: INFO
     org.hibernate.SQL: ${HIBERNATE_SQL_LOG:WARN}
 
 jwt:
@@ -49,9 +53,11 @@ jwt:
 
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8080,http://localhost:8088}
