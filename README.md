@@ -21,6 +21,27 @@ Java 21 / Spring Boot 3 multi-module backend + React (Vite) frontend (**Aether**
 ./mvnw clean test
 ```
 
+## Swagger / OpenAPI
+
+Aggregated UI via gateway: **http://localhost:8080/swagger-ui.html**
+
+Per-service UIs:
+| Service | Swagger UI |
+|---|---|
+| auth | http://localhost:8081/swagger-ui.html |
+| document | http://localhost:8082/swagger-ui.html |
+| embedding | http://localhost:8083/swagger-ui.html |
+| search | http://localhost:8084/swagger-ui.html |
+| chat | http://localhost:8085/swagger-ui.html |
+
+Use **Authorize** with a Bearer JWT from `/api/v1/auth/login`.
+
+## Logging
+
+- Correlation id header: `X-Correlation-Id` (auto-generated if missing)
+- Console pattern includes `%X{correlationId}`
+- HTTP access logs via common-library `RequestLoggingFilter` (servlet services) and gateway `CorrelationIdGlobalFilter`
+
 ## Run with local Postgres (recommended on Mac if :5432 is busy)
 
 **1. Create databases once** (user/password apne local Postgres ke hisaab se):
