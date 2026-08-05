@@ -6,7 +6,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      # Host 5433 avoids clashing with local Postgres on 5432
+      - "5433:5432"
     volumes:
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - postgres_data:/var/lib/postgresql/data
@@ -38,7 +39,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       JWT_SECRET: q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII=
-      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:8080,http://localhost:8088
       REDIS_ENABLED: "true"
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -146,7 +147,7 @@ services:
       EMBEDDING_SERVICE_URL: http://embedding-service:8083
       SEARCH_SERVICE_URL: http://search-service:8084
       CHAT_SERVICE_URL: http://chat-service:8085
-      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:8088
       JWT_SECRET: q8tcHiRtlAmIew4sB5s0HSBrdP68FF9hGhuFA38RWII=
       GATEWAY_JWT_ENABLED: "true"
     ports:
@@ -157,6 +158,16 @@ services:
       - embedding-service
       - search-service
       - chat-service
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: rag-frontend
+    ports:
+      - "8088:80"
+    depends_on:
+      - api-gateway
 
 volumes:
   postgres_data:

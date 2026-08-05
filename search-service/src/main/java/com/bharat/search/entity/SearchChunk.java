@@ -3,7 +3,6 @@ package com.bharat.search.entity;
 import com.bharat.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,7 +27,7 @@ public class SearchChunk extends BaseEntity {
     @Column(nullable = false)
     private String embeddingModel;
 
-    @Lob
-    @Column(nullable = false)
+    /** PostgreSQL TEXT — avoid @Lob (maps to oid/CLOB and fails validate). */
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String embeddingJson;
 }

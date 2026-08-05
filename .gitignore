@@ -39,6 +39,8 @@ build/
 out/
 coverage/
 *.exec
+node_modules/
+frontend/dist/
 
 # Docker volumes
 docker/data/

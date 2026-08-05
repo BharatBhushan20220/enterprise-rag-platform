@@ -5,7 +5,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,8 +30,8 @@ public class Document extends BaseEntity {
     @Column(nullable = false)
     private String storagePath;
 
-    @Lob
-    @Column
+    /** PostgreSQL TEXT — avoid @Lob (maps to oid/CLOB and fails validate). */
+    @Column(columnDefinition = "TEXT")
     private String extractedText;
 
     @Column(nullable = false)

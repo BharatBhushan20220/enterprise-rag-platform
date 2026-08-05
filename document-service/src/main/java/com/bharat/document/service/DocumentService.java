@@ -98,14 +98,18 @@ public class DocumentService {
 
             document.setChunkCount(chunks.size());
             document.setStatus(Document.DocumentStatus.INDEXED);
-            return DocumentResponse.from(documentRepository.save(document));
+            Document saved = documentRepository.save(document);
+            log.info("Document indexed id={} chunks={}", saved.getId(), saved.getChunkCount());
+            return DocumentResponse.from(saved);
         } catch (RuntimeException ex) {
             document.setStatus(Document.DocumentStatus.FAILED);
             documentRepository.save(document);
+            log.warn("Document processing failed id={}: {}", document.getId(), ex.getMessage());
             throw ex;
         } catch (Exception ex) {
             document.setStatus(Document.DocumentStatus.FAILED);
             documentRepository.save(document);
+            log.warn("Document processing failed id={}: {}", document.getId(), ex.getMessage());
             throw new BadRequestException("Failed to process document", ex);
         }
     }

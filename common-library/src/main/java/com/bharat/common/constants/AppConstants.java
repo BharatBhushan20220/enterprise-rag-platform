@@ -10,6 +10,8 @@ public final class AppConstants {
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
+    /** MDC key used in log patterns (`%X{correlationId}`). */
+    public static final String CORRELATION_ID_MDC_KEY = "correlationId";
 
     public static final String ROLE_USER = "ROLE_USER";
     public static final String ROLE_ADMIN = "ROLE_ADMIN";

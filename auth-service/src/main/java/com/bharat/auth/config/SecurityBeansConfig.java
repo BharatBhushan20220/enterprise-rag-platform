@@ -64,7 +64,8 @@ public class SecurityBeansConfig {
                                         "/v3/api-docs/**",
                                         "/api-docs/**",
                                         "/swagger-ui/**",
-                                        "/swagger-ui.html"
+                                        "/swagger-ui.html",
+                                        "/webjars/**"
                                 ).permitAll()
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
